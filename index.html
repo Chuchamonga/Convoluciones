@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convoluciones con Swipebar</title>
+</head>
+<body>
+    <h1>Título</h1>
+
+    <!-- Slider bar -->
+    <label for="swipebar">Centro: <span id="centroValor">0</span></label>
+    <input type="range" id="swipebar" min="-10" max="10" value="0" step="1" />
+
+    <!-- Canvases -->
+    <canvas id="canvas"></canvas>
+    <canvas id="Resultado"></canvas>
+
+    <script type="text/javascript">
+        var centro = 8;  // Variable para almacenar el valor del swipebar
+
+        // Actualiza el valor de `centro` cada vez que se mueva el swipebar
+        var swipebar = document.getElementById("swipebar");
+        var centroValor = document.getElementById("centroValor");
+
+        swipebar.addEventListener("input", function() {
+            centro = parseInt(swipebar.value, 10);
+            centroValor.textContent = centro;  // Actualiza la visualización del valor
+            convolucionar();
+        });
+
+        // Imagen y convolución (mantén el resto de tu código aquí)
+        var imagen = new Image();
+        imagen.onload = imageLoaded;
+        imagen.src = "P.png";
+
+        var Nucleo = [
+            [-0, -1, -0],
+            [-1, 4,-1],
+            [-0, -1, -0]
+        ];
+
+        function imageLoaded() {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            canvas.width = imagen.width;
+            canvas.height = imagen.height;
+            ctx.drawImage(imagen, 0, 0, imagen.width, imagen.height);
+
+            BlancoYNegro(canvas, ctx);
+
+            var resultadoCanvas = document.getElementById("Resultado");
+            resultadoCanvas.width = imagen.width;
+            resultadoCanvas.height = imagen.height;
+            var ctxresultado = resultadoCanvas.getContext("2d");
+            ctxresultado.drawImage(canvas, 0, 0);
+
+            convolucionar(Nucleo, ctxresultado);
+
+        }
+
+        function setpixels(pixels, p, valor) {
+            pixels[p] = valor;
+            pixels[p + 1] = valor;
+            pixels[p + 2] = valor;
+        }
+
+        function BlancoYNegro(canvas, ctx) {
+            var imgdata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var pixels = imgdata.data;
+
+            for (var p = 0; p < pixels.length; p += 4) {
+                var r = pixels[p];
+                var g = pixels[p + 1];
+                var b = pixels[p + 2];
+                var gris = (r + g + b) / 3;
+                setpixels(pixels, p, gris);
+            }
+            ctx.putImageData(imgdata, 0, 0);
+        }
+
+        function convolucionar(Nucleo, ctx) {
+            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+            var pixels = imgdata.data;
+            var width = ctx.canvas.width;
+
+            var outputData = ctx.createImageData(imgdata);
+
+            for (var i = 1; i < width - 1; i++) {
+                for (var j = 1; j < ctx.canvas.height - 1; j++) {
+                    var idx = (i + j * width) * 4;
+                    var valor = 0;
+
+                    for (var k = -1; k <= 1; k++) {
+                        for (var l = -1; l <= 1; l++) {
+                            var idx2 = ((i + k) + (j + l) * width) * 4;
+                            valor += pixels[idx2] * Nucleo[k + 1][l + 1];
+                        }
+                    }
+
+                    valor = Math.min(255, Math.max(0, valor));
+                    setpixels(outputData.data, idx, valor);
+                    outputData.data[idx + 3] = 255;  // Establece la opacidad
+                }
+            }
+
+            ctx.putImageData(outputData, 0, 0);
+        }
+    </script>
+</body>
+</html>
