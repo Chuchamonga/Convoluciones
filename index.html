@@ -15,30 +15,49 @@
     <!-- Canvases -->
     <canvas id="canvas"></canvas>
     <canvas id="Resultado"></canvas>
-
+    <video id = "video" playsinline autoplay></video>
     <script type="text/javascript">
-        var centro = 8;  // Variable para almacenar el valor del swipebar
 
-        // Actualiza el valor de `centro` cada vez que se mueva el swipebar
-        var swipebar = document.getElementById("swipebar");
-        var centroValor = document.getElementById("centroValor");
-
-        swipebar.addEventListener("input", function() {
-            centro = parseInt(swipebar.value, 10);
-            centroValor.textContent = centro;  // Actualiza la visualización del valor
-            convolucionar();
-        });
-
+        var vide = document.getElementById("video");
+        var opciones ={
+            audio:false,
+            video:{
+                width: 720,height: 720
+            }
+        };
+        if(navigator.mediaDevices.getUserMedia){
+            navigator.mediaDevices.getUserMedia(opciones)
+                .then(function(stream){
+                    video.srcObject = stream;
+                })
+                .catch(function(err){
+                    console.log("Papufallo xd",err)
+                })
+        }else{
+            console.log("Otroerror")
+        }
         // Imagen y convolución (mantén el resto de tu código aquí)
         var imagen = new Image();
         imagen.onload = imageLoaded;
         imagen.src = "P.png";
 
-        var Nucleo = [
-            [-0, -1, -0],
-            [-1, 4,-1],
-            [-0, -1, -0]
+        var SobelH = [
+            [-1, -2, -1],
+            [0, 0,0],
+            [1, 2, 1]
         ];
+        var SobelV = [
+            [1, 0, -1],
+            [2, 0, -2],
+            [1, 0, -1]
+        ];
+        var NoseDeDondeLoSaque = [
+            [-1, 0, -1],
+            [-2, 8, -2],
+            [-1, 0, -1]
+        ];
+        //var Nucleo = NoseDeDondeLoSaque;
+        var Nucleo = SobelH;
 
         function imageLoaded() {
             var canvas = document.getElementById("canvas");
@@ -78,28 +97,35 @@
             }
             ctx.putImageData(imgdata, 0, 0);
         }
-
-        function convolucionar(Nucleo, ctx) {
-            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-            var pixels = imgdata.data;
+        function getvalor(pixels,i,j,ctx){
             var width = ctx.canvas.width;
-
-            var outputData = ctx.createImageData(imgdata);
-
-            for (var i = 1; i < width - 1; i++) {
-                for (var j = 1; j < ctx.canvas.height - 1; j++) {
-                    var idx = (i + j * width) * 4;
-                    var valor = 0;
-
-                    for (var k = -1; k <= 1; k++) {
+            var valor = 0;
+            for (var k = -1; k <= 1; k++) {
                         for (var l = -1; l <= 1; l++) {
                             var idx2 = ((i + k) + (j + l) * width) * 4;
                             valor += pixels[idx2] * Nucleo[k + 1][l + 1];
                         }
                     }
+            return valor;
+        }
+        function convolucionar(Nucleo, ctx) {
+            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+            var pixels = imgdata.data;
+            var width = ctx.canvas.width;
+            
+            var outputData = ctx.createImageData(imgdata);
 
+            for (var i = 1; i < width - 1; i++) {
+                for (var j = 1; j < ctx.canvas.height - 1; j++) {
+                    var idx = (i + j * width) * 4;
+                    Nucleo = SobelH;
+                    var valor = getvalor(pixels,i,j,ctx);
+                    Nucleo = SobelV;
+                    var valor2 = getvalor(pixels,i,j,ctx);
+                    var Magnitud = Math.sqrt(valor*valor+valor2*valor2);
                     valor = Math.min(255, Math.max(0, valor));
-                    setpixels(outputData.data, idx, valor);
+                    valor2 = Math.min(255, Math.max(0, valor2));
+                    setpixels(outputData.data, idx, Magnitud);
                     outputData.data[idx + 3] = 255;  // Establece la opacidad
                 }
             }
