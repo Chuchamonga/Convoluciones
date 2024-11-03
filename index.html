@@ -7,43 +7,62 @@
 </head>
 <body>
     <h1>Título</h1>
-
-    <!-- Slider bar -->
-    <label for="swipebar">Centro: <span id="centroValor">0</span></label>
-    <input type="range" id="swipebar" min="-10" max="10" value="0" step="1" />
-
     <!-- Canvases -->
     <canvas id="canvas"></canvas>
     <canvas id="Resultado"></canvas>
-    <video id = "video" playsinline autoplay></video>
+    <video id="video" playsinline autoplay></video>
     <script type="text/javascript">
-
-        var vide = document.getElementById("video");
-        var opciones ={
-            audio:false,
-            video:{
-                width: 720,height: 720
-            }
+        window.onload = function() {
+            verCamara();
         };
-        if(navigator.mediaDevices.getUserMedia){
-            navigator.mediaDevices.getUserMedia(opciones)
-                .then(function(stream){
-                    video.srcObject = stream;
-                })
-                .catch(function(err){
-                    console.log("Papufallo xd",err)
-                })
-        }else{
-            console.log("Otroerror")
+
+        var video;
+        function verCamara() {
+            video = document.getElementById("video");
+            var opciones = {
+                audio: false,
+                video: {
+                    width: 720,
+                    height: 720
+                }
+            };
+            if (navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia(opciones)
+                    .then(function(stream) {
+                        video.srcObject = stream;
+                        procesarcamara();
+                    })
+                    .catch(function(err) {
+                        console.log("Error al acceder a la cámara:", err);
+                    });
+            } else {
+                console.log("getUserMedia no es compatible con este navegador.");
+            }
         }
-        // Imagen y convolución (mantén el resto de tu código aquí)
-        var imagen = new Image();
-        imagen.onload = imageLoaded;
-        imagen.src = "P.png";
+
+        function procesarcamara() {
+            var canvas = document.getElementById("canvas");
+            var ctx = canvas.getContext("2d");
+            canvas.width = 720; // Establece el ancho del canvas
+            canvas.height = 720; // Establece el alto del canvas
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Dibuja el video en el canvas
+            BlancoYNegro(ctx); // Convierte la imagen a blanco y negro
+            
+            // Realiza la convolución y muestra el resultado
+            var resultadoCanvas = document.getElementById("Resultado");
+            var ctxresultado = resultadoCanvas.getContext("2d");
+            resultadoCanvas.width = canvas.width; // Asegúrate de que los tamaños coincidan
+            resultadoCanvas.height = canvas.height;
+
+            convolucionar(ctx, ctxresultado); // Aplica la convolución
+
+            setTimeout(procesarcamara, 20); // Repite el procesamiento cada 20ms
+        }
 
         var SobelH = [
             [-1, -2, -1],
-            [0, 0,0],
+            [0, 0, 0],
             [1, 2, 1]
         ];
         var SobelV = [
@@ -51,32 +70,7 @@
             [2, 0, -2],
             [1, 0, -1]
         ];
-        var NoseDeDondeLoSaque = [
-            [-1, 0, -1],
-            [-2, 8, -2],
-            [-1, 0, -1]
-        ];
-        //var Nucleo = NoseDeDondeLoSaque;
         var Nucleo = SobelH;
-
-        function imageLoaded() {
-            var canvas = document.getElementById("canvas");
-            var ctx = canvas.getContext("2d");
-            canvas.width = imagen.width;
-            canvas.height = imagen.height;
-            ctx.drawImage(imagen, 0, 0, imagen.width, imagen.height);
-
-            BlancoYNegro(canvas, ctx);
-
-            var resultadoCanvas = document.getElementById("Resultado");
-            resultadoCanvas.width = imagen.width;
-            resultadoCanvas.height = imagen.height;
-            var ctxresultado = resultadoCanvas.getContext("2d");
-            ctxresultado.drawImage(canvas, 0, 0);
-
-            convolucionar(Nucleo, ctxresultado);
-
-        }
 
         function setpixels(pixels, p, valor) {
             pixels[p] = valor;
@@ -84,8 +78,8 @@
             pixels[p + 2] = valor;
         }
 
-        function BlancoYNegro(canvas, ctx) {
-            var imgdata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        function BlancoYNegro(ctx) {
+            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
             var pixels = imgdata.data;
 
             for (var p = 0; p < pixels.length; p += 4) {
@@ -97,40 +91,41 @@
             }
             ctx.putImageData(imgdata, 0, 0);
         }
-        function getvalor(pixels,i,j,ctx){
+
+        function getvalor(pixels, i, j, ctx) {
             var width = ctx.canvas.width;
             var valor = 0;
             for (var k = -1; k <= 1; k++) {
-                        for (var l = -1; l <= 1; l++) {
-                            var idx2 = ((i + k) + (j + l) * width) * 4;
-                            valor += pixels[idx2] * Nucleo[k + 1][l + 1];
-                        }
-                    }
+                for (var l = -1; l <= 1; l++) {
+                    var idx2 = ((i + k) + (j + l) * width) * 4;
+                    valor += pixels[idx2] * Nucleo[k + 1][l + 1];
+                }
+            }
             return valor;
         }
-        function convolucionar(Nucleo, ctx) {
+
+        function convolucionar(ctx, ctxresultado) {
             var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
             var pixels = imgdata.data;
             var width = ctx.canvas.width;
-            
+
             var outputData = ctx.createImageData(imgdata);
 
             for (var i = 1; i < width - 1; i++) {
                 for (var j = 1; j < ctx.canvas.height - 1; j++) {
                     var idx = (i + j * width) * 4;
-                    Nucleo = SobelH;
-                    var valor = getvalor(pixels,i,j,ctx);
-                    Nucleo = SobelV;
-                    var valor2 = getvalor(pixels,i,j,ctx);
-                    var Magnitud = Math.sqrt(valor*valor+valor2*valor2);
-                    valor = Math.min(255, Math.max(0, valor));
-                    valor2 = Math.min(255, Math.max(0, valor2));
+                    Nucleo = SobelH; // Aplica el núcleo horizontal
+                    var valor = getvalor(pixels, i, j, ctx);
+                    Nucleo = SobelV; // Aplica el núcleo vertical
+                    var valor2 = getvalor(pixels, i, j, ctx);
+                    var Magnitud = Math.sqrt(valor * valor + valor2 * valor2);
+                    Magnitud = Math.min(255, Math.max(0, Magnitud)); // Asegura que el valor esté en el rango [0, 255]
                     setpixels(outputData.data, idx, Magnitud);
-                    outputData.data[idx + 3] = 255;  // Establece la opacidad
+                    outputData.data[idx + 3] = 255; // Establece la opacidad
                 }
             }
 
-            ctx.putImageData(outputData, 0, 0);
+            ctxresultado.putImageData(outputData, 0, 0); // Muestra el resultado en el canvas de resultado
         }
     </script>
 </body>
