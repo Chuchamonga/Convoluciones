@@ -33,7 +33,7 @@
             video: {
                 facingMode: "user", // Inicia con la cámara frontal
                 width: { ideal: 640 },
-                height: { ideal: 480 }
+                height: { ideal: 640 }
             }
         };
 
@@ -54,7 +54,7 @@
             var canvas = document.createElement('canvas'); // Crear un canvas temporal
             var ctx = canvas.getContext("2d");
             canvas.width = 640; 
-            canvas.height = 480;
+            canvas.height = 640;
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height); 
             BlancoYNegro(ctx); 
