@@ -4,60 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convoluciones con Swipebar</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            border: 1px solid black; /* Para que sea visible */
+        }
+    </style>
 </head>
 <body>
     <h1>Título</h1>
-    <!-- Canvases -->
-    <canvas id="canvas"></canvas>
     <canvas id="Resultado"></canvas>
-    <video id="video" playsinline autoplay style = "display:none;"></video>
+    <button id="cambiarCamara">Cambiar Cámara</button>
+    <video id="video" playsinline autoplay style="display:none;"></video>
     <script type="text/javascript">
         window.onload = function() {
             verCamara();
         };
 
-        var video;
+        let video;
+        let currentStream;
+        let videoConstraints = {
+            audio: false,
+            video: {
+                facingMode: "user", // Inicia con la cámara frontal
+                width: 720,
+                height: 720
+            }
+        };
+
         function verCamara() {
             video = document.getElementById("video");
-            var opciones = {
-                audio: false,
-                video: {
-                    width: 720,
-                    height: 720
-                }
-            };
-            if (navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia(opciones)
-                    .then(function(stream) {
-                        video.srcObject = stream;
-                        procesarcamara();
-                    })
-                    .catch(function(err) {
-                        console.log("Error al acceder a la cámara:", err);
-                    });
-            } else {
-                console.log("getUserMedia no es compatible con este navegador.");
-            }
+            navigator.mediaDevices.getUserMedia(videoConstraints)
+                .then(function(stream) {
+                    currentStream = stream;
+                    video.srcObject = stream;
+                    procesarcamara();
+                })
+                .catch(function(err) {
+                    console.log("Error al acceder a la cámara:", err);
+                });
         }
 
         function procesarcamara() {
-            var canvas = document.getElementById("canvas");
+            var canvas = document.createElement('canvas'); // Crear un canvas temporal
             var ctx = canvas.getContext("2d");
-            canvas.width = 720; // Establece el ancho del canvas
-            canvas.height = 720; // Establece el alto del canvas
+            canvas.width = 720; 
+            canvas.height = 720;
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height); 
+            BlancoYNegro(ctx); 
             
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Dibuja el video en el canvas
-            BlancoYNegro(ctx); // Convierte la imagen a blanco y negro
-            
-            // Realiza la convolución y muestra el resultado
             var resultadoCanvas = document.getElementById("Resultado");
             var ctxresultado = resultadoCanvas.getContext("2d");
-            resultadoCanvas.width = canvas.width; // Asegúrate de que los tamaños coincidan
+            resultadoCanvas.width = canvas.width; 
             resultadoCanvas.height = canvas.height;
 
-            convolucionar(ctx, ctxresultado); // Aplica la convolución
+            convolucionar(ctx, ctxresultado); 
 
-            setTimeout(procesarcamara, 10); // Repite el procesamiento cada 20ms
+            setTimeout(procesarcamara, 100); 
         }
 
         var SobelH = [
@@ -113,19 +122,27 @@
             for (var i = 1; i < width - 1; i++) {
                 for (var j = 1; j < ctx.canvas.height - 1; j++) {
                     var idx = (i + j * width) * 4;
-                    Nucleo = SobelH; // Aplica el núcleo horizontal
+                    Nucleo = SobelH; 
                     var valor = getvalor(pixels, i, j, ctx);
-                    Nucleo = SobelV; // Aplica el núcleo vertical
+                    Nucleo = SobelV; 
                     var valor2 = getvalor(pixels, i, j, ctx);
                     var Magnitud = Math.sqrt(valor * valor + valor2 * valor2);
-                    Magnitud = Math.min(255, Math.max(0, Magnitud)); // Asegura que el valor esté en el rango [0, 255]
+                    Magnitud = Math.min(255, Math.max(0, Magnitud));
                     setpixels(outputData.data, idx, Magnitud);
-                    outputData.data[idx + 3] = 255; // Establece la opacidad
+                    outputData.data[idx + 3] = 255;
                 }
             }
 
-            ctxresultado.putImageData(outputData, 0, 0); // Muestra el resultado en el canvas de resultado
+            ctxresultado.putImageData(outputData, 0, 0); 
         }
+
+        document.getElementById("cambiarCamara").addEventListener("click", function() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop()); // Detener la cámara actual
+            }
+            videoConstraints.video.facingMode = (videoConstraints.video.facingMode === "user") ? "environment" : "user"; // Alternar entre cámaras
+            verCamara(); // Reiniciar la cámara
+        });
     </script>
 </body>
 </html>
