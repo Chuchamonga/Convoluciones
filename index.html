@@ -127,7 +127,7 @@
                     Nucleo = SobelV; 
                     var valor2 = getvalor(pixels, i, j, ctx);
                     var Magnitud = Math.sqrt(valor * valor + valor2 * valor2);
-                    Magnitud = abs(-255+(Math.min(255, Math.max(0, Magnitud))));
+                    Magnitud = Math.abs(-255+(Math.min(255, Math.max(0, Magnitud))));
                     setpixels(outputData.data, idx, Magnitud);
                     outputData.data[idx + 3] = 255;
                 }
