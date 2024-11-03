@@ -25,15 +25,15 @@
         window.onload = function() {
             verCamara();
         };
-
+        var alto = 720, ancho = 720;
         let video;
         let currentStream;
         let videoConstraints = {
             audio: false,
             video: {
                 facingMode: "user", // Inicia con la cámara frontal
-                width: { ideal: 640 },
-                height: { ideal: 640 }
+                width: { ideal: ancho },
+                height: { ideal: alto }
             }
         };
 
@@ -53,8 +53,8 @@
         function procesarcamara() {
             var canvas = document.createElement('canvas'); // Crear un canvas temporal
             var ctx = canvas.getContext("2d");
-            canvas.width = 640; 
-            canvas.height = 640;
+            canvas.width = ancho; 
+            canvas.height = alto;
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height); 
             BlancoYNegro(ctx); 
@@ -65,7 +65,7 @@
             resultadoCanvas.height = canvas.height;
 
             convolucionar(ctx, ctxresultado); 
-            requestAnimationFrame(procesarcamara); // Usar requestAnimationFrame
+            setTimeout(procesarcamara,20); // Usar requestAnimationFrame
         }
 
         var SobelH = [
