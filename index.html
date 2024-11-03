@@ -10,7 +10,7 @@
     <!-- Canvases -->
     <canvas id="canvas"></canvas>
     <canvas id="Resultado"></canvas>
-    <video id="video" playsinline autoplay></video>
+    <video id="video" playsinline autoplay style = "display:none;"></video>
     <script type="text/javascript">
         window.onload = function() {
             verCamara();
@@ -57,7 +57,7 @@
 
             convolucionar(ctx, ctxresultado); // Aplica la convolución
 
-            setTimeout(procesarcamara, 20); // Repite el procesamiento cada 20ms
+            setTimeout(procesarcamara, 10); // Repite el procesamiento cada 20ms
         }
 
         var SobelH = [
@@ -89,7 +89,6 @@
                 var gris = (r + g + b) / 3;
                 setpixels(pixels, p, gris);
             }
-            ctx.putImageData(imgdata, 0, 0);
         }
 
         function getvalor(pixels, i, j, ctx) {
