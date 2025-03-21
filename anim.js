@@ -81,8 +81,8 @@ function updateLyrics() {
 
   if (currentLine) {
     // Calcula la opacidad basada en el tiempo en la línea actual
-    var fadeInDuration = 0.1; // Duración del efecto de aparición en segundos
-    var opacity = Math.min(1, (time - currentLine.time) / fadeInDuration);
+    var fadeInDuration = 0.2; // Duración del efecto de aparición en segundos
+    var opacity = Math.min(1, (time - currentLine.time-1) / fadeInDuration);
 
     // Aplica el efecto de aparición
     lyrics.style.opacity = opacity;
