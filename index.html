@@ -1,147 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convoluciones con Swipebar</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        canvas {
-            border: 1px solid black; /* Para que sea visible */
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="img/flowers.png" type="image/x-icon">
+    <title>Flowers</title>
 </head>
+
 <body>
-    <h1>COMO VEN LOS PERROS :V</h1>
-    <canvas id="Resultado"></canvas>
-    <button id="cambiarCamara">Cambiar Cámara</button>
-    <video id="video" playsinline autoplay style="display:none;"></video>
-    <script type="text/javascript">
-        window.onload = function() {
-            verCamara();
-        };
-        var alto = 720, ancho = 720;
-        let video;
-        let currentStream;
-        let videoConstraints = {
-            audio: false,
-            video: {
-                facingMode: "user", // Inicia con la cámara frontal
-                width: { ideal: ancho },
-                height: { ideal: alto }
-            }
-        };
+    <div class="greetings">
+        <span>H</span>
+        <span>o</span>
+        <span>l</span>
+        <span>a</span>
+        <span>!</span>
+    </div>
+    <div class="description">
+        <span>ESTE DETALLE ES PARA TI :)</span>
+    </div>
+    <div class="button">
+        <button class="botones">
+            <a href="flower.html" style="color: #fff;">CLICK AQUÍ</a>
+        </button>
+    </div>
 
-        function verCamara() {
-            video = document.getElementById("video");
-            navigator.mediaDevices.getUserMedia(videoConstraints)
-                .then(function(stream) {
-                    currentStream = stream;
-                    video.srcObject = stream;
-                    procesarcamara();
-                })
-                .catch(function(err) {
-                    console.log("Error al acceder a la cámara:", err);
-                });
-        }
-
-        function procesarcamara() {
-            var canvas = document.createElement('canvas'); // Crear un canvas temporal
-            var ctx = canvas.getContext("2d");
-            canvas.width = ancho; 
-            canvas.height = alto;
-
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height); 
-            BlancoYNegro(ctx); 
-            
-            var resultadoCanvas = document.getElementById("Resultado");
-            var ctxresultado = resultadoCanvas.getContext("2d");
-            resultadoCanvas.width = canvas.width; 
-            resultadoCanvas.height = canvas.height;
-
-            convolucionar(ctx, ctxresultado); 
-            setTimeout(procesarcamara,20); // Usar requestAnimationFrame
-        }
-
-        var SobelH = [
-            [-1, -2, -1],
-            [0, 0, 0],
-            [1, 2, 1]
-        ];
-        var SobelV = [
-            [1, 0, -1],
-            [2, 0, -2],
-            [1, 0, -1]
-        ];
-        var Nucleo = SobelH; // Cambiar la inicialización aquí si es necesario
-
-        function setpixels(pixels, p, valor) {
-            pixels[p] = valor;
-            pixels[p + 1] = valor;
-            pixels[p + 2] = valor;
-        }
-
-        function BlancoYNegro(ctx) {
-            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-            var pixels = imgdata.data;
-
-            for (var p = 0; p < pixels.length; p += 4) {
-                var r = pixels[p];
-                var g = pixels[p + 1];
-                var b = pixels[p + 2];
-                var gris = (r + g + b) / 3;
-                setpixels(pixels, p, gris);
-            }
-        }
-
-        function getvalor(pixels, i, j, ctx) {
-            var width = ctx.canvas.width;
-            var valor = 0;
-            for (var k = -1; k <= 1; k++) {
-                for (var l = -1; l <= 1; l++) {
-                    var idx2 = ((i + k) + (j + l) * width) * 4;
-                    valor += pixels[idx2] * Nucleo[k + 1][l + 1];
-                }
-            }
-            return valor;
-        }
-
-        function convolucionar(ctx, ctxresultado) {
-            var imgdata = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-            var pixels = imgdata.data;
-            var width = ctx.canvas.width;
-
-            var outputData = ctx.createImageData(imgdata);
-
-            for (var i = 1; i < width - 1; i++) {
-                for (var j = 1; j < ctx.canvas.height - 1; j++) {
-                    var idx = (i + j * width) * 4;
-                    Nucleo = SobelH; 
-                    var valor = getvalor(pixels, i, j, ctx);
-                    Nucleo = SobelV; 
-                    var valor2 = getvalor(pixels, i, j, ctx);
-                    Magnitud = Math.sqrt(valor*valor+valor2*valor2);
-                    Magnitud = Math.abs(Math.min(255, Math.max(0, Magnitud)));
-                    setpixels(outputData.data, idx, Magnitud);
-                    outputData.data[idx + 3] = 255;
-                }
-            }
-
-            ctxresultado.putImageData(outputData, 0, 0); 
-        }
-
-        document.getElementById("cambiarCamara").addEventListener("click", function() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop()); // Detener la cámara actual
-            }
-            videoConstraints.video.facingMode = (videoConstraints.video.facingMode === "user") ? "environment" : "user"; // Alternar entre cámaras
-            verCamara(); // Reiniciar la cámara
-        });
-    </script>
 </body>
+
 </html>
