@@ -4,7 +4,7 @@ var lyrics = document.querySelector("#lyrics");
 
 // Array de objetos que contiene cada línea y su tiempo de aparición en segundos
 var lyricsData = [
-  { text: "Hace mucho tiempo le hago caso al corazón", time: 14 },
+  { text: "Hace mucho tiempo le hago caso al corazón", time: 10 },
   { text: "Y pasan los día', los mese' pensando en tu olor", time: 20 },
   { text: "Ha llegado el tiempo para usar la razón", time: 26.8 },
   { text: "Ante' que sea tarde y sin querer me parta en do'", time: 33 },
